@@ -49,7 +49,7 @@ void loop()
   drawPower(0, 0);
   drawTVOC(0, 60);
   drawECO2(160, 60);
-  delay(10000);
+  delay(1000);
 }
 
 static const int32_t PADDING_W = 3;
