@@ -53,11 +53,13 @@ void loop()
     CONSOLE.println("Measurement failed");
     return;
   }
-  CONSOLE.printf("TVOC %d ppb\teCO2 %d ppm\n", sgp.TVOC, sgp.eCO2);
+  uint16_t tvoc = sgp.TVOC;
+  uint16_t eco2 = sgp.eCO2;
+  CONSOLE.printf("TVOC %d ppb\teCO2 %d ppm\n", tvoc, eco2);
   drawPower(0, 0);
   drawTemperature(0, 60);
-  drawECO2(160, 60);
-  drawTVOC(0, 160);
+  drawECO2(eco2, 160, 60);
+  drawTVOC(tvoc, 0, 160);
   drawHumidity(THIRD_SIZE_MONITOR_W, 160);
   drawTHI(THIRD_SIZE_MONITOR_W * 2, 160);
   canvas.pushSprite(0, 0);
@@ -97,9 +99,8 @@ void drawThirdsizeMoniter(String title, String unit, String value, uint16_t fcol
   canvas.drawRect(x, y, THIRD_SIZE_MONITOR_W, THIRD_SIZE_MONITOR_H, GREENYELLOW);
 }
 
-void drawECO2(int32_t x, int32_t y)
+void drawECO2(uint16_t eco2, int32_t x, int32_t y)
 {
-  int16_t eco2 = sgp.eCO2;
   uint16_t fcolor = WHITE;
   // Warning value
   if (eco2 > 1000)
@@ -109,9 +110,8 @@ void drawECO2(int32_t x, int32_t y)
   drawHalfsizeMonitor("eCO2", "ppm", String(eco2), fcolor, x, y);
 }
 
-void drawTVOC(int32_t x, int32_t y)
+void drawTVOC(uint16_t tvoc, int32_t x, int32_t y)
 {
-  int16_t tvoc = sgp.TVOC;
   uint16_t fcolor = WHITE;
   // Warning value
   if (tvoc > 89)
