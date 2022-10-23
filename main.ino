@@ -53,20 +53,30 @@ void loop()
     CONSOLE.println("Measurement failed");
     return;
   }
-  CONSOLE.print("TVOC ");
-  CONSOLE.print(sgp.TVOC);
-  CONSOLE.print(" ppb\t");
-  CONSOLE.print("eCO2 ");
-  CONSOLE.print(sgp.eCO2);
-  CONSOLE.println(" ppm");
+  CONSOLE.printf("TVOC %d ppb\teCO2 %d ppm\n", sgp.TVOC, sgp.eCO2);
   drawPower(0, 0);
-  drawTVOC(0, 60);
+  drawTemperature(0, 60);
   drawECO2(160, 60);
-  drawThirdsizeMoniter("HOGE", "ppb", String(25), WHITE, 0, 160);
-  drawThirdsizeMoniter("SHITSUDO", "%", String(15), WHITE, THIRD_SIZE_MONITOR_W, 160);
-  drawThirdsizeMoniter("fukai", "hs", String(25), WHITE, THIRD_SIZE_MONITOR_W * 2, 160);
+  drawTVOC(0, 160);
+  drawHumidity(THIRD_SIZE_MONITOR_W, 160);
+  drawTHI(THIRD_SIZE_MONITOR_W * 2, 160);
   canvas.pushSprite(0, 0);
   delay(1000);
+}
+
+void drawTHI(int32_t x, int32_t y)
+{
+  drawThirdsizeMoniter("THI", "", "60", WHITE, x, y);
+}
+
+void drawHumidity(int32_t x, int32_t y)
+{
+  drawThirdsizeMoniter("HUMIDITY", "%", "40", WHITE, x, y);
+}
+
+void drawTemperature(int32_t x, int32_t y)
+{
+  drawHalfsizeMonitor("Temperature", "'c", String(24.5, 1U), WHITE, x, y);
 }
 
 void drawThirdsizeMoniter(String title, String unit, String value, uint16_t fcolor, int32_t x, int32_t y)
@@ -81,7 +91,7 @@ void drawThirdsizeMoniter(String title, String unit, String value, uint16_t fcol
   canvas.setTextColor(BLACK, GREENYELLOW);
   canvas.drawString(title, x + ((THIRD_SIZE_MONITOR_W - title_width) / 2), y, 2);
   canvas.setTextColor(fcolor, BLACK);
-  canvas.drawString(value, x + (THIRD_SIZE_MONITOR_W - value_width), y + FONT_2_H, 7);
+  canvas.drawString(value, x + (THIRD_SIZE_MONITOR_W - value_width), y + FONT_2_H + 2, 7);
   canvas.setTextColor(GREENYELLOW, BLACK);
   canvas.drawString(unit, x + (THIRD_SIZE_MONITOR_W - unit_width), y + FONT_2_H + FONT_6_H, 2);
   canvas.drawRect(x, y, THIRD_SIZE_MONITOR_W, THIRD_SIZE_MONITOR_H, GREENYELLOW);
@@ -96,7 +106,7 @@ void drawECO2(int32_t x, int32_t y)
   {
     fcolor = RED;
   }
-  drawHalfsizeMonitor("eCO2", "ppm", eco2, fcolor, x, y);
+  drawHalfsizeMonitor("eCO2", "ppm", String(eco2), fcolor, x, y);
 }
 
 void drawTVOC(int32_t x, int32_t y)
@@ -108,31 +118,21 @@ void drawTVOC(int32_t x, int32_t y)
   {
     fcolor = RED;
   }
-  drawHalfsizeMonitor("TVOC", "ppb", tvoc, fcolor, x, y);
+  drawThirdsizeMoniter("TVOC", "ppb", String(tvoc), fcolor, x, y);
 }
 
 // Width 160, Hight 100
-void drawHalfsizeMonitor(String title, String unit, int16_t value, uint16_t fcolor, int32_t x, int32_t y)
+void drawHalfsizeMonitor(String title, String unit, String value, uint16_t fcolor, int32_t x, int32_t y)
 {
   canvas.setTextColor(GREENYELLOW, BLACK);
-  canvas.fillRect(x, y, 4, HALF_SIZE_MONITOR_H, GREENYELLOW);
+  canvas.fillRect(x, y + 4, 4, HALF_SIZE_MONITOR_H - 8, GREENYELLOW);
   canvas.drawString(title, x + 6, y + PADDING_H, 4);
-  int32_t value_x = x + (HALF_SIZE_MONITOR_W - FONT_6_W * 4);
-  if (value < 1000)
-  {
-    value_x += FONT_6_W;
-  }
-  if (value < 100)
-  {
-    value_x += FONT_6_W;
-  }
-  if (value < 10)
-  {
-    value_x += FONT_6_W;
-  }
-  canvas.setTextColor(fcolor, BLACK);
 
-  canvas.drawString(String(value), value_x, y + FONT_4_H, 7);
+  canvas.setTextFont(7);
+  int16_t value_width = canvas.textWidth(value);
+
+  canvas.setTextColor(fcolor, BLACK);
+  canvas.drawString(String(value), x + (HALF_SIZE_MONITOR_W - value_width), y + FONT_4_H, 7);
   canvas.setTextColor(GREENYELLOW, BLACK);
   canvas.setTextFont(4);
   int16_t unit_width = canvas.textWidth(unit);
