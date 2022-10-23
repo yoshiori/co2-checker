@@ -3,7 +3,19 @@
 
 #define CONSOLE Serial
 
-long CONSOL_BAND = 115200;
+static const long CONSOL_BAND = 115200;
+
+static const int32_t PADDING_W = 3;
+static const int32_t PADDING_H = 3;
+static const int32_t FONT_2_H = 16;
+static const int32_t FONT_4_H = 26;
+static const int32_t FONT_6_W = 32;
+static const int32_t FONT_6_H = 48;
+static const int32_t HALF_SIZE_MONITOR_W = 160;
+static const int32_t HALF_SIZE_MONITOR_H = 100;
+static const int32_t THIRD_SIZE_MONITOR_W = 106;
+static const int32_t THIRD_SIZE_MONITOR_H = 80;
+
 Adafruit_SGP30 sgp;
 
 // Doublebuffer
@@ -50,8 +62,29 @@ void loop()
   drawPower(0, 0);
   drawTVOC(0, 60);
   drawECO2(160, 60);
+  drawThirdsizeMoniter("HOGE", "ppb", String(25), WHITE, 0, 160);
+  drawThirdsizeMoniter("SHITSUDO", "%", String(15), WHITE, THIRD_SIZE_MONITOR_W, 160);
+  drawThirdsizeMoniter("fukai", "hs", String(25), WHITE, THIRD_SIZE_MONITOR_W * 2, 160);
   canvas.pushSprite(0, 0);
   delay(1000);
+}
+
+void drawThirdsizeMoniter(String title, String unit, String value, uint16_t fcolor, int32_t x, int32_t y)
+{
+  canvas.setTextFont(2);
+  int16_t title_width = canvas.textWidth(title);
+  int16_t unit_width = canvas.textWidth(unit);
+  canvas.setTextFont(7);
+  int16_t value_width = canvas.textWidth(value);
+
+  canvas.fillRect(x, y, THIRD_SIZE_MONITOR_W, FONT_2_H, GREENYELLOW);
+  canvas.setTextColor(BLACK, GREENYELLOW);
+  canvas.drawString(title, x + ((THIRD_SIZE_MONITOR_W - title_width) / 2), y, 2);
+  canvas.setTextColor(fcolor, BLACK);
+  canvas.drawString(value, x + (THIRD_SIZE_MONITOR_W - value_width), y + FONT_2_H, 7);
+  canvas.setTextColor(GREENYELLOW, BLACK);
+  canvas.drawString(unit, x + (THIRD_SIZE_MONITOR_W - unit_width), y + FONT_2_H + FONT_6_H, 2);
+  canvas.drawRect(x, y, THIRD_SIZE_MONITOR_W, THIRD_SIZE_MONITOR_H, GREENYELLOW);
 }
 
 void drawECO2(int32_t x, int32_t y)
@@ -78,14 +111,6 @@ void drawTVOC(int32_t x, int32_t y)
   drawHalfsizeMonitor("TVOC", "ppb", tvoc, fcolor, x, y);
 }
 
-static const int32_t PADDING_W = 3;
-static const int32_t PADDING_H = 3;
-static const int32_t FONT_4_H = 26;
-static const int32_t FONT_6_W = 32;
-static const int32_t FONT_6_H = 48;
-static const int32_t HALF_SIZE_MONITOR_W = 160;
-static const int32_t HALF_SIZE_MONITOR_H = 100;
-
 // Width 160, Hight 100
 void drawHalfsizeMonitor(String title, String unit, int16_t value, uint16_t fcolor, int32_t x, int32_t y)
 {
@@ -110,8 +135,8 @@ void drawHalfsizeMonitor(String title, String unit, int16_t value, uint16_t fcol
   canvas.drawString(String(value), value_x, y + FONT_4_H, 7);
   canvas.setTextColor(GREENYELLOW, BLACK);
   canvas.setTextFont(4);
-  int16_t unit_size = canvas.textWidth(unit);
-  canvas.drawString(unit, x + HALF_SIZE_MONITOR_W - unit_size - PADDING_W, y + FONT_4_H + FONT_6_H, 4);
+  int16_t unit_width = canvas.textWidth(unit);
+  canvas.drawString(unit, x + HALF_SIZE_MONITOR_W - unit_width - PADDING_W, y + FONT_4_H + FONT_6_H, 4);
 }
 
 void drawPower(int32_t x, int32_t y)
