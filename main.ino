@@ -54,12 +54,6 @@ void loop()
   delay(1000);
 }
 
-static const int32_t PADDING_W = 3;
-static const int32_t PADDING_H = 3;
-static const int32_t FONT_4_H = 26;
-static const int32_t FONT_6_H = 48;
-static const int32_t FONT_6_W = 32;
-
 void drawECO2(int32_t x, int32_t y)
 {
   int16_t eco2 = sgp.eCO2;
@@ -84,12 +78,21 @@ void drawTVOC(int32_t x, int32_t y)
   drawHalfsizeMonitor("TVOC", "ppb", tvoc, fcolor, x, y);
 }
 
+static const int32_t PADDING_W = 3;
+static const int32_t PADDING_H = 3;
+static const int32_t FONT_4_H = 26;
+static const int32_t FONT_6_W = 32;
+static const int32_t FONT_6_H = 48;
+static const int32_t HALF_SIZE_MONITOR_W = 160;
+static const int32_t HALF_SIZE_MONITOR_H = 100;
+
+// Width 160, Hight 100
 void drawHalfsizeMonitor(String title, String unit, int16_t value, uint16_t fcolor, int32_t x, int32_t y)
 {
   canvas.setTextColor(GREENYELLOW, BLACK);
-  canvas.fillRect(x, y, 4, FONT_4_H * 2 + PADDING_H + FONT_6_H, GREENYELLOW);
+  canvas.fillRect(x, y, 4, HALF_SIZE_MONITOR_H, GREENYELLOW);
   canvas.drawString(title, x + 6, y + PADDING_H, 4);
-  int32_t value_x = x + 6;
+  int32_t value_x = x + (HALF_SIZE_MONITOR_W - FONT_6_W * 4);
   if (value < 1000)
   {
     value_x += FONT_6_W;
@@ -104,9 +107,11 @@ void drawHalfsizeMonitor(String title, String unit, int16_t value, uint16_t fcol
   }
   canvas.setTextColor(fcolor, BLACK);
 
-  canvas.drawString(String(value), value_x, y + PADDING_H + FONT_4_H, 7);
+  canvas.drawString(String(value), value_x, y + FONT_4_H, 7);
   canvas.setTextColor(GREENYELLOW, BLACK);
-  canvas.drawString(unit, x + 6 + FONT_6_W * 3 + 5, y + PADDING_H + (FONT_4_H * 3), 4);
+  canvas.setTextFont(4);
+  int16_t unit_size = canvas.textWidth(unit);
+  canvas.drawString(unit, x + HALF_SIZE_MONITOR_W - unit_size - PADDING_W, y + FONT_4_H + FONT_6_H, 4);
 }
 
 void drawPower(int32_t x, int32_t y)
