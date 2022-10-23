@@ -60,54 +60,53 @@ static const int32_t FONT_4_H = 26;
 static const int32_t FONT_6_H = 48;
 static const int32_t FONT_6_W = 32;
 
-void drawECO2(int32_t x, int32_t y){
-  canvas.setTextColor(GREENYELLOW, BLACK);
-  canvas.fillRect(x, y, 4, FONT_4_H * 2 + PADDING_H + FONT_6_H, GREENYELLOW);
-  canvas.drawString("eCO2", x + 6, y + PADDING_H, 4);
+void drawECO2(int32_t x, int32_t y)
+{
   int16_t eco2 = sgp.eCO2;
-  int32_t eco2_x = x + 6;
-  canvas.setTextColor(WHITE, BLACK);
-  if(eco2 < 1000){
-    eco2_x += FONT_6_W;
-  }
-  if(eco2 < 100){
-    eco2_x += FONT_6_W;
-  }
-  if(eco2 < 10){
-    eco2_x += FONT_6_W;
-  }
-
+  uint16_t fcolor = WHITE;
   // Warning value
-  if(eco2 > 1000){
-    canvas.setTextColor(RED, BLACK);
+  if (eco2 > 1000)
+  {
+    fcolor = RED;
   }
-  canvas.drawString(String(eco2), eco2_x, y + PADDING_H + FONT_4_H, 7);
-  canvas.setTextColor(GREENYELLOW, BLACK);
-  canvas.drawString("ppm", x + 6 + FONT_6_W * 3 + 5, y + PADDING_H + (FONT_4_H * 3), 4);
+  drawHalfsizeMonitor("eCO2", "ppm", eco2, fcolor, x, y);
 }
 
-void drawTVOC(int32_t x, int32_t y){
+void drawTVOC(int32_t x, int32_t y)
+{
+  int16_t tvoc = sgp.TVOC;
+  uint16_t fcolor = WHITE;
+  // Warning value
+  if (tvoc > 89)
+  {
+    fcolor = RED;
+  }
+  drawHalfsizeMonitor("TVOC", "ppb", tvoc, fcolor, x, y);
+}
+
+void drawHalfsizeMonitor(String title, String unit, int16_t value, uint16_t fcolor, int32_t x, int32_t y)
+{
   canvas.setTextColor(GREENYELLOW, BLACK);
   canvas.fillRect(x, y, 4, FONT_4_H * 2 + PADDING_H + FONT_6_H, GREENYELLOW);
-  canvas.drawString("TVIC", x + 6, y + PADDING_H, 4);
-  int16_t tvoc = sgp.TVOC;
-  int32_t tvoc_x = x + 6 + FONT_6_W;
-  canvas.setTextColor(WHITE, BLACK);
-  if(tvoc < 100){
-    tvoc_x += FONT_6_W;
+  canvas.drawString(title, x + 6, y + PADDING_H, 4);
+  int32_t value_x = x + 6;
+  if (value < 1000)
+  {
+    value_x += FONT_6_W;
   }
-  if(tvoc < 10){
-    tvoc_x += FONT_6_W;
+  if (value < 100)
+  {
+    value_x += FONT_6_W;
   }
+  if (value < 10)
+  {
+    value_x += FONT_6_W;
+  }
+  canvas.setTextColor(fcolor, BLACK);
 
-  // Warning value
-  if(tvoc > 89){
-    canvas.setTextColor(RED, BLACK);
-  }
-
-  canvas.drawString(String(tvoc), tvoc_x, y + PADDING_H + FONT_4_H, 7);
+  canvas.drawString(String(value), value_x, y + PADDING_H + FONT_4_H, 7);
   canvas.setTextColor(GREENYELLOW, BLACK);
-  canvas.drawString("ppb", x + 6 + FONT_6_W * 3 + 5, y + PADDING_H + (FONT_4_H * 3), 4);
+  canvas.drawString(unit, x + 6 + FONT_6_W * 3 + 5, y + PADDING_H + (FONT_4_H * 3), 4);
 }
 
 void drawPower(int32_t x, int32_t y)
