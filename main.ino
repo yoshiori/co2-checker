@@ -47,12 +47,13 @@ void setup()
 
 void loop()
 {
-  canvas.fillScreen(BLACK);
+  warmUp();
   if (!sgp.IAQmeasure())
   {
     CONSOLE.println("Measurement failed");
     return;
   }
+  canvas.fillScreen(BLACK);
   uint16_t tvoc = sgp.TVOC;
   uint16_t eco2 = sgp.eCO2;
   CONSOLE.printf("TVOC %d ppb\teCO2 %d ppm\n", tvoc, eco2);
@@ -64,6 +65,24 @@ void loop()
   drawTHI(THIRD_SIZE_MONITOR_W * 2, 160);
   canvas.pushSprite(0, 0);
   delay(1000);
+}
+
+void warmUp()
+{
+  CONSOLE.println("Sensor warm up start");
+  static int i = 15;
+  long last_millis = 0;
+  while (i > 0)
+  {
+    if (millis() - last_millis > 1000)
+    {
+      last_millis = millis();
+      i--;
+      M5.Lcd.fillRect(20, 120, 60, 30, BLACK);
+      M5.Lcd.drawNumber(i, 20, 120, 2);
+    }
+  }
+  CONSOLE.println("Sensor warm up finish");
 }
 
 void drawTHI(int32_t x, int32_t y)
