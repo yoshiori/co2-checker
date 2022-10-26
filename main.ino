@@ -2,6 +2,7 @@
 #include "Adafruit_SGP30.h"
 #include "SHT3X.h"
 #include <WiFi.h>
+#include <IIJMachinistClient.h>
 
 #include "config.h"
 
@@ -26,6 +27,11 @@ static const int16_t DHISPLAY_W = M5.Lcd.height();
 
 Adafruit_SGP30 sgp;
 SHT3X sht30;
+IIJMachinistClient *machinist;
+
+static const String MACHINIST_AGENT_NAME = "M5Stack";
+static const String MACHINIST_NAMESPACE = "Environment Sensor";
+
 // Doublebuffer
 TFT_eSprite canvas = TFT_eSprite(&M5.Lcd);
 
@@ -56,9 +62,10 @@ void setup()
     M5.Lcd.print(".");
   }
   M5.Lcd.println(" : Finish");
-  CONSOLE.println("Setup finish");
+  machinist = new IIJMachinistClient(MACHINIST_APIKEY);
   canvas.setColorDepth(8);
   canvas.createSprite(M5.Lcd.width(), M5.Lcd.height());
+  CONSOLE.println("Setup finish");
 }
 
 void loop()
@@ -95,7 +102,22 @@ void loop()
   drawTHI(thi, THIRD_SIZE_MONITOR_W, 160);
   drawTVOC(tvoc, THIRD_SIZE_MONITOR_W * 2, 160);
   canvas.pushSprite(0, 0);
+  sendSensorData(temperature, humidity, tvoc, eco2, soil_moisture);
   delay(1000);
+}
+
+void sendSensorData(float temperature, float humidity, uint16_t tvoc, uint16_t eco2, uint16_t soil_moisture)
+{
+  static unsigned long nextUpdate = 0;
+  if (nextUpdate < millis())
+  {
+    machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Temperature", temperature);
+    machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Humidity", humidity);
+    machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "TVOC", tvoc);
+    machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "eCO2", eco2);
+    machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Soil Moisture", soil_moisture);
+    nextUpdate = millis() + 60000;
+  }
 }
 
 uint32_t getAbsoluteHumidity(float temperature, float humidity)
