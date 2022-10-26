@@ -1,6 +1,8 @@
 #include <M5Stack.h>
 #include "Adafruit_SGP30.h"
 #include "SHT3X.h"
+#include <WiFi.h>
+
 #include "config.h"
 
 #define CONSOLE Serial
@@ -32,21 +34,28 @@ void setup()
   M5.begin();
   CONSOLE.begin(CONSOL_BAND);
   CONSOLE.println("Setup start");
+  M5.Lcd.println("Setup start");
   CONSOLE.printf("DISP H %d \tDISP W %d \n", DHISPLAY_H, DHISPLAY_W);
+  M5.Lcd.print("Connecting SPG30");
   if (!sgp.begin())
   {
     CONSOLE.println("Sensor not found :(");
     while (1)
       ;
   }
-  M5.Power.begin();
-  M5.Lcd.fillScreen(BLACK);
-  M5.Lcd.setTextFont(7);
-  M5.Lcd.setTextSize(1);
-  M5.Lcd.setTextColor(WHITE, BLACK);
-  M5.Lcd.setTextDatum(TL_DATUM);
-  M5.Lcd.setCursor(20, 40);
+  M5.Lcd.println(" : Finish");
 
+  M5.Power.begin();
+
+  M5.Lcd.printf("Connecting WiFi to %s", WIFI_SSID);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    CONSOLE.print(".");
+    M5.Lcd.print(".");
+  }
+  M5.Lcd.println(" : Finish");
   CONSOLE.println("Setup finish");
   canvas.setColorDepth(8);
   canvas.createSprite(M5.Lcd.width(), M5.Lcd.height());
