@@ -1,0 +1,4 @@
+static const char *WIFI_SSID = "YOUR WiFi SSID";
+static const char *WIFI_PASSWORD = "YOUR WiFi PASSWORD";
+// https://app.machinist.iij.jp/
+static const String MACHINIST_APIKEY = "YOUR API KEY";
