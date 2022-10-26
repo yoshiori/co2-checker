@@ -1,6 +1,6 @@
 #include <M5Stack.h>
 #include "Adafruit_SGP30.h"
-#include "SHT3X.h"
+#include "M5_ENV.h"
 #include <WiFi.h>
 #include <IIJMachinistClient.h>
 
@@ -28,6 +28,7 @@ static const int16_t DHISPLAY_W = M5.Lcd.height();
 Adafruit_SGP30 sgp;
 SHT3X sht30;
 IIJMachinistClient *machinist;
+QMP6988 qmp6988;
 
 static const String MACHINIST_AGENT_NAME = "M5Stack";
 static const String MACHINIST_NAMESPACE = "Environment Sensor";
@@ -52,6 +53,7 @@ void setup()
   M5.Lcd.println(" : Finish");
 
   M5.Power.begin();
+  qmp6988.init();
 
   M5.Lcd.printf("Connecting WiFi to %s", WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -91,10 +93,12 @@ void loop()
   uint16_t eco2 = sgp.eCO2;
 
   uint16_t soil_moisture = analogRead(36);
+  float pressure = qmp6988.calcPressure() / 100;
   canvas.fillScreen(BLACK);
   CONSOLE.printf("TVOC %d ppb\teCO2 %d ppm\n", tvoc, eco2);
   CONSOLE.printf("temp %f \t hum %f\n", temperature, humidity);
   CONSOLE.printf("water %d\n", soil_moisture);
+  CONSOLE.printf("pressure %f\n", pressure);
   drawSoilMoisture(soil_moisture, 0, 0);
   drawTemperature(temperature, 0, 60);
   drawECO2(eco2, 160, 60);
@@ -102,17 +106,18 @@ void loop()
   drawTHI(thi, THIRD_SIZE_MONITOR_W, 160);
   drawTVOC(tvoc, THIRD_SIZE_MONITOR_W * 2, 160);
   canvas.pushSprite(0, 0);
-  sendSensorData(temperature, humidity, tvoc, eco2, soil_moisture);
+  sendSensorData(temperature, humidity, pressure, tvoc, eco2, soil_moisture);
   delay(1000);
 }
 
-void sendSensorData(float temperature, float humidity, uint16_t tvoc, uint16_t eco2, uint16_t soil_moisture)
+void sendSensorData(float temperature, float humidity, float pressure, uint16_t tvoc, uint16_t eco2, uint16_t soil_moisture)
 {
   static unsigned long nextUpdate = 0;
   if (nextUpdate < millis())
   {
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Temperature", temperature);
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Humidity", humidity);
+    machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Pressure", pressure);
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "TVOC", tvoc);
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "eCO2", eco2);
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Soil Moisture", soil_moisture);
