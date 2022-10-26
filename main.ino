@@ -84,9 +84,8 @@ void loop()
 
 uint32_t getAbsoluteHumidity(float temperature, float humidity)
 {
-  const float absoluteHumidity = 216.7f * ((humidity / 100.0f) * 6.112f * exp((17.62f * temperature) / (243.12f + temperature)) / (273.15f + temperature));
-  const uint32_t absoluteHumidityScaled = static_cast<uint32_t>(1000.0f * absoluteHumidity);
-  return absoluteHumidityScaled;
+  float absoluteHumidity = 216.7f * ((humidity / 100.0f) * 6.112f * exp((17.62f * temperature) / (243.12f + temperature)) / (273.15f + temperature));
+  return static_cast<uint32_t>(1000.0f * absoluteHumidity);
 }
 
 float getTHI(float temperature, float humidity)
