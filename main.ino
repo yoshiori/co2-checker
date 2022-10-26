@@ -1,6 +1,8 @@
 #include <M5Stack.h>
 #include "Adafruit_SGP30.h"
 #include "SHT3X.h"
+#include "config.h"
+
 #define CONSOLE Serial
 
 static const long CONSOL_BAND = 115200;
