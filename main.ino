@@ -16,6 +16,10 @@ static const int32_t HALF_SIZE_MONITOR_H = 100;
 static const int32_t THIRD_SIZE_MONITOR_W = 106;
 static const int32_t THIRD_SIZE_MONITOR_H = 80;
 
+// I don't know why. It's reverse.
+static const int16_t DHISPLAY_H = M5.Lcd.width();
+static const int16_t DHISPLAY_W = M5.Lcd.height();
+
 Adafruit_SGP30 sgp;
 SHT3X sht30;
 // Doublebuffer
@@ -26,6 +30,7 @@ void setup()
   M5.begin();
   CONSOLE.begin(CONSOL_BAND);
   CONSOLE.println("Setup start");
+  CONSOLE.printf("DISP H %d \tDISP W %d \n", DHISPLAY_H, DHISPLAY_W);
   if (!sgp.begin())
   {
     CONSOLE.println("Sensor not found :(");
@@ -75,9 +80,9 @@ void loop()
   drawSoilMoisture(soil_moisture, 0, 0);
   drawTemperature(temperature, 0, 60);
   drawECO2(eco2, 160, 60);
-  drawTVOC(tvoc, 0, 160);
-  drawHumidity(humidity, THIRD_SIZE_MONITOR_W, 160);
-  drawTHI(thi, THIRD_SIZE_MONITOR_W * 2, 160);
+  drawHumidity(humidity, 0, 160);
+  drawTHI(thi, THIRD_SIZE_MONITOR_W, 160);
+  drawTVOC(tvoc, THIRD_SIZE_MONITOR_W * 2, 160);
   canvas.pushSprite(0, 0);
   delay(1000);
 }
@@ -104,8 +109,13 @@ void warmUp()
     {
       last_millis = millis();
       i--;
-      M5.Lcd.fillRect(20, 120, 60, 30, BLACK);
-      M5.Lcd.drawNumber(i, 20, 120, 2);
+      M5.Lcd.fillRect(0, 0, DHISPLAY_W, DHISPLAY_H, BLACK);
+      int32_t x = (DHISPLAY_W - FONT_6_W * 2) / 2;
+      if (i < 10)
+      {
+        x += FONT_6_W;
+      }
+      M5.Lcd.drawNumber(i, x, (DHISPLAY_H - FONT_6_H) / 2, 7);
     }
   }
 }
@@ -232,6 +242,6 @@ void drawSoilMoisture(uint16_t soil_moisture, int32_t x, int32_t y)
   canvas.setTextFont(7);
   int16_t soil_moisture_width = canvas.textWidth(soil_moisture_text);
 
-  canvas.drawString(soil_moisture_text, 320 - soil_moisture_width, y + 3, 7);
-  canvas.drawRect(x, y, 320, (FONT_4_H + PADDING_H) * 2, GREENYELLOW);
+  canvas.drawString(soil_moisture_text, DHISPLAY_W - soil_moisture_width, y + 3, 7);
+  canvas.drawRect(x, y, DHISPLAY_W, (FONT_4_H + PADDING_H) * 2, GREENYELLOW);
 }
