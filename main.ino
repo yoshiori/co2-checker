@@ -55,6 +55,7 @@ void loop()
   }
   float temperature = sht30.cTemp;
   float humidity = sht30.humidity;
+  float thi = getTHI(temperature, humidity);
 
   sgp.setHumidity(getAbsoluteHumidity(temperature, humidity));
 
@@ -74,18 +75,24 @@ void loop()
   drawECO2(eco2, 160, 60);
   drawTVOC(tvoc, 0, 160);
   drawHumidity(humidity, THIRD_SIZE_MONITOR_W, 160);
-  drawTHI(THIRD_SIZE_MONITOR_W * 2, 160);
+  drawTHI(thi, THIRD_SIZE_MONITOR_W * 2, 160);
   canvas.pushSprite(0, 0);
   delay(1000);
 }
 
 uint32_t getAbsoluteHumidity(float temperature, float humidity)
 {
-  // approximation formula from Sensirion SGP30 Driver Integration chapter 3.15
   const float absoluteHumidity = 216.7f * ((humidity / 100.0f) * 6.112f * exp((17.62f * temperature) / (243.12f + temperature)) / (273.15f + temperature));
   const uint32_t absoluteHumidityScaled = static_cast<uint32_t>(1000.0f * absoluteHumidity);
   return absoluteHumidityScaled;
 }
+
+float getTHI(float temperature, float humidity)
+{
+  // https://ja.wikipedia.org/wiki/%E4%B8%8D%E5%BF%AB%E6%8C%87%E6%95%B0
+  return 0.81 * temperature + 0.01f * humidity * (0.99f * temperature - 14.3f) + 46.3f;
+}
+
 void warmUp()
 {
   static int i = 15;
@@ -102,9 +109,31 @@ void warmUp()
   }
 }
 
-void drawTHI(int32_t x, int32_t y)
+void drawTHI(float thi, int32_t x, int32_t y)
 {
-  drawThirdsizeMoniter("THI", "", "60", WHITE, x, y);
+  uint16_t fcolor = WHITE;
+  if (thi < 55.0f)
+  {
+    fcolor = RED;
+  }
+  if (55.0f < thi && thi < 60.0f)
+  {
+    fcolor = YELLOW;
+  }
+  if (70.0f < thi && thi < 75.0f)
+  {
+    fcolor = YELLOW;
+  }
+  if (75.0f < thi && thi < 80.0f)
+  {
+    fcolor = ORANGE;
+  }
+  if (80.0f < thi)
+  {
+    fcolor = RED;
+  }
+
+  drawThirdsizeMoniter("THI", "", String(thi, 0), fcolor, x, y);
 }
 
 void drawHumidity(float humidity, int32_t x, int32_t y)
