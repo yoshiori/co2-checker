@@ -1,6 +1,6 @@
 #include <M5Stack.h>
 #include "Adafruit_SGP30.h"
-
+#include "SHT3X.h"
 #define CONSOLE Serial
 
 static const long CONSOL_BAND = 115200;
@@ -17,7 +17,7 @@ static const int32_t THIRD_SIZE_MONITOR_W = 106;
 static const int32_t THIRD_SIZE_MONITOR_H = 80;
 
 Adafruit_SGP30 sgp;
-
+SHT3X sht30;
 // Doublebuffer
 TFT_eSprite canvas = TFT_eSprite(&M5.Lcd);
 
@@ -48,28 +48,46 @@ void setup()
 void loop()
 {
   warmUp();
-  if (!sgp.IAQmeasure())
+  if (sht30.get() != 0)
   {
-    CONSOLE.println("Measurement failed");
+    CONSOLE.println("SHT30 Measurement failed");
     return;
   }
-  canvas.fillScreen(BLACK);
+  float temperature = sht30.cTemp;
+  float humidity = sht30.humidity;
+
+  sgp.setHumidity(getAbsoluteHumidity(temperature, humidity));
+
+  if (!sgp.IAQmeasure())
+  {
+    CONSOLE.println("SPG Measurement failed");
+    return;
+  }
   uint16_t tvoc = sgp.TVOC;
   uint16_t eco2 = sgp.eCO2;
+
+  canvas.fillScreen(BLACK);
   CONSOLE.printf("TVOC %d ppb\teCO2 %d ppm\n", tvoc, eco2);
+  CONSOLE.printf("temp %f \t hum %f\n", temperature, humidity);
   drawPower(0, 0);
-  drawTemperature(0, 60);
+  drawTemperature(temperature, 0, 60);
   drawECO2(eco2, 160, 60);
   drawTVOC(tvoc, 0, 160);
-  drawHumidity(THIRD_SIZE_MONITOR_W, 160);
+  drawHumidity(humidity, THIRD_SIZE_MONITOR_W, 160);
   drawTHI(THIRD_SIZE_MONITOR_W * 2, 160);
   canvas.pushSprite(0, 0);
   delay(1000);
 }
 
+uint32_t getAbsoluteHumidity(float temperature, float humidity)
+{
+  // approximation formula from Sensirion SGP30 Driver Integration chapter 3.15
+  const float absoluteHumidity = 216.7f * ((humidity / 100.0f) * 6.112f * exp((17.62f * temperature) / (243.12f + temperature)) / (273.15f + temperature));
+  const uint32_t absoluteHumidityScaled = static_cast<uint32_t>(1000.0f * absoluteHumidity);
+  return absoluteHumidityScaled;
+}
 void warmUp()
 {
-  CONSOLE.println("Sensor warm up start");
   static int i = 15;
   long last_millis = 0;
   while (i > 0)
@@ -82,7 +100,6 @@ void warmUp()
       M5.Lcd.drawNumber(i, 20, 120, 2);
     }
   }
-  CONSOLE.println("Sensor warm up finish");
 }
 
 void drawTHI(int32_t x, int32_t y)
@@ -90,14 +107,14 @@ void drawTHI(int32_t x, int32_t y)
   drawThirdsizeMoniter("THI", "", "60", WHITE, x, y);
 }
 
-void drawHumidity(int32_t x, int32_t y)
+void drawHumidity(float humidity, int32_t x, int32_t y)
 {
-  drawThirdsizeMoniter("HUMIDITY", "%", "40", WHITE, x, y);
+  drawThirdsizeMoniter("HUMIDITY", "%", String(humidity, 0), WHITE, x, y);
 }
 
-void drawTemperature(int32_t x, int32_t y)
+void drawTemperature(float temperature, int32_t x, int32_t y)
 {
-  drawHalfsizeMonitor("Temperature", "'c", String(24.5, 1U), WHITE, x, y);
+  drawHalfsizeMonitor("Temperature", "'c", String(temperature, 1), WHITE, x, y);
 }
 
 void drawThirdsizeMoniter(String title, String unit, String value, uint16_t fcolor, int32_t x, int32_t y)
