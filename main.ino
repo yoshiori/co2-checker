@@ -50,6 +50,8 @@ void setup()
     while (1)
       ;
   }
+  sgp.softReset();
+  sgp.IAQinit();
   M5.Lcd.println(" : Finish");
 
   M5.Power.begin();
@@ -63,6 +65,7 @@ void setup()
     CONSOLE.print(".");
     M5.Lcd.print(".");
   }
+  CONSOLE.println("");
   M5.Lcd.println(" : Finish");
   machinist = new IIJMachinistClient(MACHINIST_APIKEY);
   canvas.setColorDepth(8);
