@@ -67,10 +67,12 @@ void loop()
   uint16_t tvoc = sgp.TVOC;
   uint16_t eco2 = sgp.eCO2;
 
+  uint16_t soil_moisture = analogRead(36);
   canvas.fillScreen(BLACK);
   CONSOLE.printf("TVOC %d ppb\teCO2 %d ppm\n", tvoc, eco2);
   CONSOLE.printf("temp %f \t hum %f\n", temperature, humidity);
-  drawPower(0, 0);
+  CONSOLE.printf("water %d\n", soil_moisture);
+  drawSoilMoisture(soil_moisture, 0, 0);
   drawTemperature(temperature, 0, 60);
   drawECO2(eco2, 160, 60);
   drawTVOC(tvoc, 0, 160);
@@ -204,37 +206,33 @@ void drawHalfsizeMonitor(String title, String unit, String value, uint16_t fcolo
   canvas.drawString(unit, x + HALF_SIZE_MONITOR_W - unit_width - PADDING_W, y + FONT_4_H + FONT_6_H, 4);
 }
 
-void drawPower(int32_t x, int32_t y)
+void drawSoilMoisture(uint16_t soil_moisture, int32_t x, int32_t y)
 {
   canvas.setTextColor(GREENYELLOW, BLACK);
-  canvas.drawString("POWER", x + 1, y + 3, 4);
-  int32_t second_line_y = y + 3 + FONT_4_H + PADDING_H;
-  if (M5.Power.isCharging())
-  {
-    canvas.setTextColor(YELLOW, BLACK);
-    canvas.drawString("EXTERNAL", x + 1, second_line_y, 4);
-  }
-  else
-  {
-    canvas.setTextColor(RED, BLACK);
-    canvas.drawString("INTERNAL", x + 1, second_line_y, 4);
-  }
+  canvas.drawString("SOIL ", x + 1, y + PADDING_H, 4);
+  canvas.drawString("MOISTURE", x + 1, y + FONT_4_H + PADDING_H * 2, 4);
   canvas.drawFastVLine(x + 140 + 2, y + 1, (FONT_4_H + PADDING_H) * 2, GREENYELLOW);
-  canvas.setTextColor(WHITE, BLACK);
-  int8_t battery = M5.Power.getBatteryLevel();
-  int32_t battery_x = x + 180;
-  if (battery < 100)
+
+  uint16_t fcolor = WHITE;
+  // Warning value
+  if (soil_moisture > 1000)
   {
-    canvas.setTextColor(YELLOW, BLACK);
-    battery_x += FONT_6_W;
+    fcolor = YELLOW;
   }
-  if (battery < 10)
+  if (soil_moisture > 2000)
   {
-    canvas.setTextColor(RED, BLACK);
-    battery_x += FONT_6_W;
+    fcolor = ORANGE;
   }
-  canvas.drawString(String(battery), battery_x, y + 3, 7);
-  canvas.setTextColor(GREENYELLOW, BLACK);
-  canvas.drawString("%", x + 280, second_line_y, 4);
+  if (soil_moisture > 3000)
+  {
+    fcolor = RED;
+  }
+  canvas.setTextColor(fcolor, BLACK);
+
+  String soil_moisture_text = String(soil_moisture);
+  canvas.setTextFont(7);
+  int16_t soil_moisture_width = canvas.textWidth(soil_moisture_text);
+
+  canvas.drawString(soil_moisture_text, 320 - soil_moisture_width, y + 3, 7);
   canvas.drawRect(x, y, 320, (FONT_4_H + PADDING_H) * 2, GREENYELLOW);
 }
