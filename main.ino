@@ -64,7 +64,7 @@ void setup()
 
   if (!SPIFFS.begin())
   {
-    Serial.println("SPIFFS Mount Failed");
+    CONSOLE.println("SPIFFS Mount Failed");
     while (1)
       ;
   }
