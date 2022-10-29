@@ -22,6 +22,10 @@ static const int32_t HALF_SIZE_MONITOR_H = 100;
 static const int32_t THIRD_SIZE_MONITOR_W = 106;
 static const int32_t THIRD_SIZE_MONITOR_H = 80;
 
+static const unsigned long SAVE_IAQ_BASE_LINE_INTERVAL = 1000 * 60 * 10;
+static const unsigned long SEND_METRICS_INTERVAL = 1000 * 60;
+static const String IAQ_BASELINE_FILE_PATH = "/baseline.txt";
+
 // I don't know why. It's reverse.
 static const int16_t DHISPLAY_H = M5.Lcd.width();
 static const int16_t DHISPLAY_W = M5.Lcd.height();
@@ -142,12 +146,10 @@ void setupIAQBaseline()
     CONSOLE.println("- file not found");
     return;
   }
-  CONSOLE.println("**********************");
-  while (file.available())
-  {
-    CONSOLE.write(file.read());
-  }
-  CONSOLE.println("**********************");
+  uint16_t eCO2_base = file.parseInt();
+  uint16_t tvoc_base = file.parseInt();
+  CONSOLE.printf("loaded baseline: eCO2 = %d TVOC = %d\n", eCO2_base, tvoc_base);
+  sgp.setIAQBaseline(eCO2_base, tvoc_base);
   file.close();
 }
 
@@ -156,7 +158,7 @@ void saveIAQBaseline()
   static unsigned long next_baseline_update = 0;
   if (next_baseline_update < millis())
   {
-    uint16_t tvoc_base, eCO2_base;
+    uint16_t eCO2_base, tvoc_base;
     if (!sgp.getIAQBaseline(&eCO2_base, &tvoc_base))
     {
       return;
