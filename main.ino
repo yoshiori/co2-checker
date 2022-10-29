@@ -1,6 +1,7 @@
 #include <M5Stack.h>
 #include "Adafruit_SGP30.h"
 #include "M5_ENV.h"
+#include "SPIFFS.h"
 #include <WiFi.h>
 #include <IIJMachinistClient.h>
 
@@ -57,6 +58,13 @@ void setup()
   M5.Power.begin();
   qmp6988.init();
 
+  if (!SPIFFS.begin())
+  {
+    Serial.println("SPIFFS Mount Failed");
+    while (1)
+      ;
+  }
+  setupIAQBaseline();
   M5.Lcd.printf("Connecting WiFi to %s", WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED)
