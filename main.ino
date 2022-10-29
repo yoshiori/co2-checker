@@ -98,10 +98,7 @@ void loop()
   uint16_t soil_moisture = analogRead(36);
   float pressure = qmp6988.calcPressure() / 100;
   canvas.fillScreen(BLACK);
-  CONSOLE.printf("TVOC %d ppb\teCO2 %d ppm\n", tvoc, eco2);
-  CONSOLE.printf("temp %f \t hum %f\n", temperature, humidity);
-  CONSOLE.printf("water %d\n", soil_moisture);
-  CONSOLE.printf("pressure %f\n", pressure);
+  CONSOLE.printf("TVOC:%dppb\teCO2:%dppm\ttemp:%f\thum:%f\twater:%d\tpressure:%f\n", tvoc, eco2, temperature, humidity, soil_moisture, pressure);
   drawSoilMoisture(soil_moisture, 0, 0);
   drawTemperature(temperature, 0, 60);
   drawECO2(eco2, 160, 60);
