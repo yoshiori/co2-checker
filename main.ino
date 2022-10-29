@@ -110,7 +110,6 @@ void loop()
   uint16_t soil_moisture = analogRead(36);
   float pressure = qmp6988.calcPressure() / 100;
   canvas.fillScreen(BLACK);
-  CONSOLE.printf("TVOC:%dppb\teCO2:%dppm\ttemp:%f\thum:%f\twater:%d\tpressure:%f\n", tvoc, eco2, temperature, humidity, soil_moisture, pressure);
   drawSoilMoisture(soil_moisture, 0, 0);
   drawTemperature(temperature, 0, 60);
   drawECO2(eco2, 160, 60);
@@ -128,6 +127,7 @@ void sendMetrics(float temperature, float humidity, float pressure, uint16_t tvo
   static unsigned long next_data_send = 0;
   if (next_data_send < millis())
   {
+    CONSOLE.printf("TVOC:%dppb\teCO2:%dppm\ttemp:%f\thum:%f\twater:%d\tpressure:%f\n", tvoc, eco2, temperature, humidity, soil_moisture, pressure);
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Temperature", temperature);
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Humidity", humidity);
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Pressure", pressure);
