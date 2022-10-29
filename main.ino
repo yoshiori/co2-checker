@@ -68,6 +68,7 @@ void setup()
     while (1)
       ;
   }
+
   setupIAQBaseline();
   M5.Lcd.printf("Connecting WiFi to %s", WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -137,13 +138,19 @@ void sendMetrics(float temperature, float humidity, float pressure, uint16_t tvo
     next_data_send = millis() + SEND_METRICS_INTERVAL;
   }
 }
-
+static unsigned long next_baseline_update = 0;
 void setupIAQBaseline()
 {
-  File file = SPIFFS.open(IAQ_BASELINE_FILE_PATH, "r");
+  if (!SPIFFS.exists(IAQ_BASELINE_FILE_PATH))
+  {
+    CONSOLE.println("Baseline data not found. The baseline is not saved for 12 hours.");
+    next_baseline_update = millis() + 1000 * 60 * 60 * 12;
+    return;
+  }
+  File file = SPIFFS.open(IAQ_BASELINE_FILE_PATH, FILE_READ);
   if (!file)
   {
-    CONSOLE.println("- file not found");
+    CONSOLE.println("- file can not open");
     return;
   }
   uint16_t eCO2_base = file.parseInt();
@@ -155,7 +162,6 @@ void setupIAQBaseline()
 
 void saveIAQBaseline()
 {
-  static unsigned long next_baseline_update = 0;
   if (next_baseline_update < millis())
   {
     uint16_t eCO2_base, tvoc_base;
@@ -164,7 +170,7 @@ void saveIAQBaseline()
       return;
     }
     CONSOLE.printf("Baseline: eCO2 = %d TVOC = %d\n", eCO2_base, tvoc_base);
-    File file = SPIFFS.open(IAQ_BASELINE_FILE_PATH, "w");
+    File file = SPIFFS.open(IAQ_BASELINE_FILE_PATH, FILE_WRITE);
     if (!file)
     {
       CONSOLE.println("- failed to open file");
