@@ -114,14 +114,15 @@ void loop()
   drawTHI(thi, THIRD_SIZE_MONITOR_W, 160);
   drawTVOC(tvoc, THIRD_SIZE_MONITOR_W * 2, 160);
   canvas.pushSprite(0, 0);
-  sendSensorData(temperature, humidity, pressure, tvoc, eco2, soil_moisture);
+  sendMetrics(temperature, humidity, pressure, tvoc, eco2, soil_moisture);
+  saveIAQBaseline();
   delay(1000);
 }
 
-void sendSensorData(float temperature, float humidity, float pressure, uint16_t tvoc, uint16_t eco2, uint16_t soil_moisture)
+void sendMetrics(float temperature, float humidity, float pressure, uint16_t tvoc, uint16_t eco2, uint16_t soil_moisture)
 {
-  static unsigned long nextUpdate = 0;
-  if (nextUpdate < millis())
+  static unsigned long next_data_send = 0;
+  if (next_data_send < millis())
   {
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Temperature", temperature);
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Humidity", humidity);
@@ -129,7 +130,48 @@ void sendSensorData(float temperature, float humidity, float pressure, uint16_t 
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "TVOC", tvoc);
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "eCO2", eco2);
     machinist->post(MACHINIST_AGENT_NAME, MACHINIST_NAMESPACE, "Soil Moisture", soil_moisture);
-    nextUpdate = millis() + 60000;
+    next_data_send = millis() + SEND_METRICS_INTERVAL;
+  }
+}
+
+void setupIAQBaseline()
+{
+  File file = SPIFFS.open(IAQ_BASELINE_FILE_PATH, "r");
+  if (!file)
+  {
+    CONSOLE.println("- file not found");
+    return;
+  }
+  CONSOLE.println("**********************");
+  while (file.available())
+  {
+    CONSOLE.write(file.read());
+  }
+  CONSOLE.println("**********************");
+  file.close();
+}
+
+void saveIAQBaseline()
+{
+  static unsigned long next_baseline_update = 0;
+  if (next_baseline_update < millis())
+  {
+    uint16_t tvoc_base, eCO2_base;
+    if (!sgp.getIAQBaseline(&eCO2_base, &tvoc_base))
+    {
+      return;
+    }
+    CONSOLE.printf("Baseline: eCO2 = %d TVOC = %d\n", eCO2_base, tvoc_base);
+    File file = SPIFFS.open(IAQ_BASELINE_FILE_PATH, "w");
+    if (!file)
+    {
+      CONSOLE.println("- failed to open file");
+      return;
+    }
+    file.println(eCO2_base);
+    file.println(tvoc_base);
+    file.close();
+    next_baseline_update = millis() + SAVE_IAQ_BASE_LINE_INTERVAL;
   }
 }
 
